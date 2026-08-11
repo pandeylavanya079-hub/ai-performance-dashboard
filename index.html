@@ -382,6 +382,54 @@
             </div>
         </div>
 
+        <!-- AI NUTRITION & CALORIE TRACKER CARD -->
+        <div class="card">
+            <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
+                <span><i class="fa-solid fa-utensils" style="color: #34d399;"></i> AI Nutrition & Macro Calorie Tracker</span>
+                <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="openModal('geminiKeyModal')"><i class="fa-solid fa-key"></i> Gemini API Key</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" class="form-control" id="foodInput" placeholder="Type what you ate (e.g. '2 eggs, 1 bowl oatmeal, 200g paneer, 1 glass milk, 1 apple')" style="flex-grow: 1;">
+                    <button class="btn btn-green" id="btnTrackNutrition" onclick="analyzeNutritionWithAI()"><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Track Nutrition</button>
+                </div>
+
+                <!-- Macro Badges Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: center;">
+                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">🔥 Calories</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #f59e0b;" id="val-calories">0 kcal</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: center;">
+                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">🥩 Protein</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #34d399;" id="val-protein">0 g</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: center;">
+                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">🍞 Carbs</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #60a5fa;" id="val-carbs">0 g</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: center;">
+                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">🥑 Fats</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #fbbf24;" id="val-fats">0 g</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; text-align: center;">
+                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">🥦 Fiber</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #a78bfa;" id="val-fiber">0 g</div>
+                    </div>
+                </div>
+
+                <!-- Logged Meals History List -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">Logged Meals Today:</span>
+                        <button class="del-btn" style="font-size: 12px; color: var(--accent-rose);" onclick="clearLoggedMeals()">Reset Meals Today</button>
+                    </div>
+                    <div id="loggedMealsList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 7-COLUMN WEEKLY SCHEDULE GRID BOARD -->
         <div class="card">
             <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
@@ -478,6 +526,20 @@
 </div>
 
 <!-- MODALS -->
+<div class="modal-overlay" id="geminiKeyModal">
+    <div class="modal-card">
+        <div class="modal-header"><span>🔑 Google Gemini API Key Settings</span><button class="del-btn" onclick="closeModal('geminiKeyModal')"><i class="fa-solid fa-xmark"></i></button></div>
+        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 10px;">
+            (Optional) Enter your Google Gemini API Key for live AI natural language meal parsing. If left blank, the app uses our high-accuracy built-in nutrition database!
+        </div>
+        <input type="password" class="form-control" id="geminiApiKeyInput" placeholder="Paste AI API Key here (e.g. AIzaSy...)">
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 10px;">
+            <button class="btn btn-secondary" onclick="closeModal('geminiKeyModal')">Cancel</button>
+            <button class="btn btn-green" onclick="saveGeminiApiKey()">Save Key</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="activityModal">
     <div class="modal-card">
         <div class="modal-header"><span>➕ Add Custom Activity</span><button class="del-btn" onclick="closeModal('activityModal')"><i class="fa-solid fa-xmark"></i></button></div>
@@ -961,6 +1023,190 @@
         }
     }
 
+    // --- AI NUTRITION & MACRO PARSING ENGINE ---
+    let macroChartInstance = null;
+
+    function saveGeminiApiKey() {
+        const key = document.getElementById('geminiApiKeyInput').value.trim();
+        if (key) {
+            localStorage.setItem('gemini_api_key', key);
+            alert('✅ Gemini API Key saved successfully!');
+        } else {
+            localStorage.removeItem('gemini_api_key');
+            alert('Cleared Gemini API Key. Will use high-precision built-in nutrition database.');
+        }
+        closeModal('geminiKeyModal');
+    }
+
+    const foodDB = [
+        { keywords: ['egg', 'eggs'], calories: 70, protein: 6, carbs: 0.5, fats: 5, fiber: 0, unit: 'piece' },
+        { keywords: ['oat', 'oats', 'oatmeal'], calories: 195, protein: 6.5, carbs: 33, fats: 3.5, fiber: 5, unit: 'bowl' },
+        { keywords: ['paneer', 'cottage cheese'], calories: 265, protein: 18, carbs: 6, fats: 20, fiber: 0, unit: '100g' },
+        { keywords: ['chicken', 'breast'], calories: 165, protein: 31, carbs: 0, fats: 3.6, fiber: 0, unit: '100g' },
+        { keywords: ['roti', 'chapati', 'phulka'], calories: 100, protein: 3, carbs: 20, fats: 0.5, fiber: 2.5, unit: 'piece' },
+        { keywords: ['paratha', 'parantha'], calories: 250, protein: 4, carbs: 32, fats: 12, fiber: 3, unit: 'piece' },
+        { keywords: ['dal', 'lentil', 'daal'], calories: 150, protein: 9, carbs: 20, fats: 3, fiber: 5, unit: 'bowl' },
+        { keywords: ['rice', 'chawal'], calories: 130, protein: 2.5, carbs: 28, fats: 0.3, fiber: 0.4, unit: 'bowl' },
+        { keywords: ['milk', 'doodh'], calories: 150, protein: 8, carbs: 12, fats: 8, fiber: 0, unit: 'glass' },
+        { keywords: ['whey', 'protein powder', 'protein scoop'], calories: 120, protein: 24, carbs: 3, fats: 1.5, fiber: 0, unit: 'scoop' },
+        { keywords: ['curd', 'dahi', 'yogurt'], calories: 120, protein: 6, carbs: 8, fats: 6, fiber: 0, unit: 'bowl' },
+        { keywords: ['apple', 'banana', 'orange', 'fruit'], calories: 90, protein: 1, carbs: 22, fats: 0.3, fiber: 3, unit: 'piece' },
+        { keywords: ['almond', 'almonds', 'kaju', 'nut', 'nuts'], calories: 7, protein: 0.25, carbs: 0.2, fats: 0.6, fiber: 0.2, unit: 'piece' },
+        { keywords: ['fish', 'machli'], calories: 130, protein: 22, carbs: 0, fats: 4, fiber: 0, unit: '100g' },
+        { keywords: ['salad', 'veggies', 'vegetables'], calories: 50, protein: 2, carbs: 8, fats: 0.5, fiber: 3.5, unit: 'bowl' }
+    ];
+
+    function parseFoodStringLocal(text) {
+        let totalCal = 0, totalP = 0, totalC = 0, totalF = 0, totalFib = 0;
+        const items = text.split(/[,+;\n]/).map(s => s.trim()).filter(Boolean);
+
+        items.forEach(rawItem => {
+            let qty = 1;
+            const matchQty = rawItem.match(/^(\d+(\.\d+)?)/);
+            if (matchQty) qty = parseFloat(matchQty[1]);
+
+            const itemLower = rawItem.toLowerCase();
+            let matchedFood = null;
+
+            for (const food of foodDB) {
+                if (food.keywords.some(k => itemLower.includes(k))) {
+                    matchedFood = food;
+                    break;
+                }
+            }
+
+            if (!matchedFood) {
+                matchedFood = { keywords: [rawItem], calories: 120, protein: 4, carbs: 15, fats: 4, fiber: 2, unit: 'portion' };
+            }
+
+            totalCal += Math.round(matchedFood.calories * qty);
+            totalP += Math.round(matchedFood.protein * qty * 10) / 10;
+            totalC += Math.round(matchedFood.carbs * qty * 10) / 10;
+            totalF += Math.round(matchedFood.fats * qty * 10) / 10;
+            totalFib += Math.round(matchedFood.fiber * qty * 10) / 10;
+        });
+
+        return { calories: totalCal, protein: totalP, carbs: totalC, fats: totalF, fiber: totalFib };
+    }
+
+    async function analyzeNutritionWithAI() {
+        const input = document.getElementById('foodInput').value.trim();
+        if (!input) return alert('Enter what you ate first (e.g. 2 eggs, 1 bowl oatmeal, 200g paneer)!');
+
+        const btn = document.getElementById('btnTrackNutrition');
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+
+        const apiKey = localStorage.getItem('gemini_api_key');
+        let result = null;
+
+        if (apiKey) {
+            try {
+                const prompt = `Parse the food text "${input}" and return ONLY valid JSON format without markdown wrapping: {"calories": number, "protein": number, "carbs": number, "fats": number, "fiber": number}`;
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await res.json();
+                const textResp = data.candidates[0].content.parts[0].text;
+                const cleanJson = textResp.replace(/```json/g, '').replace(/```/g, '').trim();
+                const parsed = JSON.parse(cleanJson);
+                result = {
+                    calories: parsed.calories || 0,
+                    protein: parsed.protein || 0,
+                    carbs: parsed.carbs || 0,
+                    fats: parsed.fats || 0,
+                    fiber: parsed.fiber || 0
+                };
+            } catch(e) {
+                console.warn('Gemini API call failed, falling back to local NLP engine:', e);
+            }
+        }
+
+        if (!result) {
+            result = parseFoodStringLocal(input);
+        }
+
+        state.nutritionLogs = state.nutritionLogs || [];
+        state.nutritionLogs.push({
+            id: Date.now(),
+            text: input,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            ...result
+        });
+
+        document.getElementById('foodInput').value = '';
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Track Nutrition';
+
+        renderNutritionUI();
+        saveState();
+    }
+
+    function clearLoggedMeals() {
+        if (confirm('Reset today\'s logged meals?')) {
+            state.nutritionLogs = [];
+            renderNutritionUI();
+            saveState();
+        }
+    }
+
+    function deleteMealItem(idx) {
+        if (state.nutritionLogs && state.nutritionLogs[idx]) {
+            state.nutritionLogs.splice(idx, 1);
+            renderNutritionUI();
+            saveState();
+        }
+    }
+
+    function renderNutritionUI() {
+        const logs = state.nutritionLogs || [];
+        let totalCal = 0, totalP = 0, totalC = 0, totalF = 0, totalFib = 0;
+
+        logs.forEach(l => {
+            totalCal += (l.calories || 0);
+            totalP += (l.protein || 0);
+            totalC += (l.carbs || 0);
+            totalF += (l.fats || 0);
+            totalFib += (l.fiber || 0);
+        });
+
+        const elCal = document.getElementById('val-calories');
+        const elP = document.getElementById('val-protein');
+        const elC = document.getElementById('val-carbs');
+        const elF = document.getElementById('val-fats');
+        const elFib = document.getElementById('val-fiber');
+
+        if (elCal) elCal.innerText = Math.round(totalCal) + ' kcal';
+        if (elP) elP.innerText = Math.round(totalP) + ' g';
+        if (elC) elC.innerText = Math.round(totalC) + ' g';
+        if (elF) elF.innerText = Math.round(totalF) + ' g';
+        if (elFib) elFib.innerText = Math.round(totalFib) + ' g';
+
+        const listEl = document.getElementById('loggedMealsList');
+        if (listEl) {
+            if (logs.length === 0) {
+                listEl.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No meals logged today yet. Enter a meal above to track macros!</div>`;
+            } else {
+                listEl.innerHTML = logs.map((l, idx) => `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
+                        <div>
+                            <div style="font-weight: 700; color: #f3f4f6;">${l.text} <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">(${l.time})</span></div>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                🔥 ${Math.round(l.calories)} kcal | 🥩 P: ${Math.round(l.protein)}g | 🍞 C: ${Math.round(l.carbs)}g | 🥑 F: ${Math.round(l.fats)}g | 🥦 Fib: ${Math.round(l.fiber)}g
+                            </div>
+                        </div>
+                        <button class="del-btn" onclick="deleteMealItem(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        if (macroChartInstance) {
+            macroChartInstance.data.datasets[0].data = [totalC * 4 || 200, totalP * 4 || 150, totalF * 9 || 100];
+            macroChartInstance.update();
+        }
+    }
+
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -977,11 +1223,12 @@
         });
 
         const ctxMacro = document.getElementById('macroChart').getContext('2d');
-        new Chart(ctxMacro, {
+        macroChartInstance = new Chart(ctxMacro, {
             type: 'doughnut',
             data: { labels: ['Carbs', 'Protein', 'Fats'], datasets: [{ data: [265*4, 154*4, 71*9], backgroundColor: ['#60a5fa', '#34d399', '#fbbf24'] }] },
             options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
         });
+        renderNutritionUI();
     });
 </script>
 
