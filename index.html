@@ -360,9 +360,16 @@
         <div class="main-grid">
             <div style="display: flex; flex-direction: column; gap: 24px;">
                 <div class="card">
-                    <div class="card-title">
+                    <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
                         <span><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i> Custom Schedule</span>
-                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openModal('activityModal')">+ Add Activity</button>
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                            <div class="tab-switcher" style="padding: 2px;">
+                                <button class="tab-btn active" id="dayTab-weekday" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('weekday')">💼 Weekday</button>
+                                <button class="tab-btn" id="dayTab-saturday" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('saturday')">🏃 Saturday</button>
+                                <button class="tab-btn" id="dayTab-sunday" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('sunday')">🧘 Sunday</button>
+                            </div>
+                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openModal('activityModal')">+ Add Activity</button>
+                        </div>
                     </div>
                     <div class="schedule-list" id="scheduleList"></div>
                 </div>
@@ -451,6 +458,13 @@
         <div class="modal-header"><span>➕ Add Custom Activity</span><button class="del-btn" onclick="closeModal('activityModal')"><i class="fa-solid fa-xmark"></i></button></div>
         <input type="text" class="form-control" id="actTime" placeholder="Time Window (e.g. 08:00 - 09:30 AM)">
         <input type="text" class="form-control" id="actTitle" placeholder="Activity Title">
+        <select class="form-control" id="actDayTarget">
+            <option value="current" selected>Apply to Current Selected Tab</option>
+            <option value="weekday">💼 Weekdays (Mon-Fri)</option>
+            <option value="saturday">🏃 Saturday</option>
+            <option value="sunday">🧘 Sunday</option>
+            <option value="all">🌐 All Days</option>
+        </select>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
             <button class="btn btn-secondary" onclick="closeModal('activityModal')">Cancel</button>
             <button class="btn" onclick="addCustomActivity()">Add Activity</button>
@@ -499,7 +513,12 @@
 
 <script>
     let state = {
-        schedule: [],
+        activeDayTab: 'weekday',
+        schedules: {
+            weekday: [],
+            saturday: [],
+            sunday: []
+        },
         priorities: [],
         habits: [],
         scores: { productivity: 0, health: 0, learning: 0, fitness: 0, discipline: 0, consistency: 0, goal: 0 }
@@ -507,12 +526,28 @@
 
     let monthlyChartInstance = null;
 
+    function switchDayTab(day) {
+        state.activeDayTab = day;
+        ['weekday', 'saturday', 'sunday'].forEach(d => {
+            const btn = document.getElementById(`dayTab-${d}`);
+            if (btn) btn.classList.toggle('active', d === day);
+        });
+        renderSchedule();
+    }
+
+    function detectCurrentDay() {
+        const dayNum = new Date().getDay(); // 0 = Sunday, 6 = Saturday
+        if (dayNum === 6) switchDayTab('saturday');
+        else if (dayNum === 0) switchDayTab('sunday');
+        else switchDayTab('weekday');
+    }
+
     function evaluateWeaknesses() {
         const grid = document.getElementById('reminderCardsGrid');
         if (!grid) return;
         const weaknesses = [];
 
-        if (state.scores.learning < 85) {
+        if (state.scores.learning > 0 && state.scores.learning < 85) {
             weaknesses.push({
                 tag: '📚 Learning Gap Detected',
                 text: `Learning Score is currently ${state.scores.learning}/100 (Target: ≥85).`,
@@ -533,7 +568,7 @@
             });
         }
 
-        if (state.scores.productivity < 85) {
+        if (state.scores.productivity > 0 && state.scores.productivity < 85) {
             weaknesses.push({
                 tag: '⚡ Productivity Slump',
                 text: `Productivity Score is ${state.scores.productivity}/100 with a 45m afternoon focus dip.`,
@@ -561,9 +596,10 @@
         }
     }
 
-    function addScheduleItem(time, desc) {
-        state.schedule.unshift({ id: Date.now(), time, desc, checked: false });
-        render(); saveState();
+    function addScheduleItem(time, desc, targetDay) {
+        const currentList = state.schedules[targetDay || state.activeDayTab] || [];
+        currentList.unshift({ id: Date.now(), time, desc, checked: false });
+        renderSchedule(); saveState();
         alert(`✅ Added corrective action to schedule: "${desc}"`);
     }
 
@@ -584,7 +620,23 @@
 
     function loadState() {
         const saved = localStorage.getItem('ai_performance_standalone_db');
-        if (saved) { try { state = JSON.parse(saved); } catch(e) {} }
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed.schedules) {
+                    state = parsed;
+                } else if (parsed.schedule) {
+                    state = {
+                        activeDayTab: 'weekday',
+                        schedules: { weekday: parsed.schedule || [], saturday: [], sunday: [] },
+                        priorities: parsed.priorities || [],
+                        habits: parsed.habits || [],
+                        scores: parsed.scores || { productivity: 0, health: 0, learning: 0, fitness: 0, discipline: 0, consistency: 0, goal: 0 }
+                    };
+                }
+            } catch(e) {}
+        }
+        detectCurrentDay();
         render(); evaluateWeaknesses();
     }
 
@@ -597,18 +649,30 @@
         }
     }
 
-    function render() {
+    function renderSchedule() {
         const schedEl = document.getElementById('scheduleList');
-        if (schedEl) {
-            schedEl.innerHTML = state.schedule.map((item, idx) => `
-                <div class="schedule-item">
-                    <div class="time-badge">${item.time}</div>
-                    <div class="schedule-desc">${item.desc}</div>
-                    <input type="checkbox" class="schedule-check" ${item.checked ? 'checked' : ''} onchange="toggleSchedule(${idx})">
-                    <button class="del-btn" onclick="deleteSchedule(${idx})"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
+        if (!schedEl) return;
+        const currentList = state.schedules[state.activeDayTab] || [];
+        if (currentList.length === 0) {
+            schedEl.innerHTML = `
+                <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 14px;">
+                    <i class="fa-solid fa-calendar-plus" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--accent-purple);"></i>
+                    No activities scheduled for <b>${state.activeDayTab.toUpperCase()}</b> yet.<br>Click <b>"+ Add Activity"</b> to create your schedule!
+                </div>`;
+            return;
         }
+        schedEl.innerHTML = currentList.map((item, idx) => `
+            <div class="schedule-item">
+                <div class="time-badge">${item.time}</div>
+                <div class="schedule-desc">${item.desc}</div>
+                <input type="checkbox" class="schedule-check" ${item.checked ? 'checked' : ''} onchange="toggleSchedule(${idx})">
+                <button class="del-btn" onclick="deleteSchedule(${idx})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        `).join('');
+    }
+
+    function render() {
+        renderSchedule();
 
         const prioEl = document.getElementById('priorityList');
         if (prioEl) {
@@ -694,14 +758,39 @@
 
     function updateMonthlyView() { renderMonthlyChart(); renderHeatmap(); }
 
-    function toggleSchedule(idx) { state.schedule[idx].checked = !state.schedule[idx].checked; saveState(); }
-    function deleteSchedule(idx) { state.schedule.splice(idx, 1); render(); saveState(); }
+    function toggleSchedule(idx) {
+        const list = state.schedules[state.activeDayTab] || [];
+        if (list[idx]) list[idx].checked = !list[idx].checked;
+        saveState();
+    }
+
+    function deleteSchedule(idx) {
+        const list = state.schedules[state.activeDayTab] || [];
+        if (list[idx]) list.splice(idx, 1);
+        renderSchedule(); saveState();
+    }
+
     function addCustomActivity() {
         const time = document.getElementById('actTime').value.trim();
         const desc = document.getElementById('actTitle').value.trim();
+        const target = document.getElementById('actDayTarget') ? document.getElementById('actDayTarget').value : 'current';
         if (!time || !desc) return alert('Enter time & title!');
-        state.schedule.push({ id: Date.now(), time, desc, checked: false });
-        closeModal('activityModal'); render(); saveState(); evaluateWeaknesses();
+
+        const item = { id: Date.now(), time, desc, checked: false };
+
+        if (target === 'all') {
+            state.schedules.weekday.push({...item});
+            state.schedules.saturday.push({...item});
+            state.schedules.sunday.push({...item});
+        } else if (target === 'current') {
+            (state.schedules[state.activeDayTab] = state.schedules[state.activeDayTab] || []).push(item);
+        } else {
+            (state.schedules[target] = state.schedules[target] || []).push(item);
+        }
+
+        document.getElementById('actTime').value = '';
+        document.getElementById('actTitle').value = '';
+        closeModal('activityModal'); renderSchedule(); saveState(); evaluateWeaknesses();
     }
 
     function toggleHabit(idx) { state.habits[idx].checked = !state.habits[idx].checked; saveState(); evaluateWeaknesses(); }
@@ -735,11 +824,13 @@
             localStorage.removeItem('ai_performance_standalone_db');
             localStorage.removeItem('ai_performance_db');
             state = {
-                schedule: [],
+                activeDayTab: 'weekday',
+                schedules: { weekday: [], saturday: [], sunday: [] },
                 priorities: [],
                 habits: [],
                 scores: { productivity: 0, health: 0, learning: 0, fitness: 0, discipline: 0, consistency: 0, goal: 0 }
             };
+            switchDayTab('weekday');
             render();
             evaluateWeaknesses();
             const status = document.getElementById('statusText');
