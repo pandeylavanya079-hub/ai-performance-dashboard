@@ -276,6 +276,7 @@
 
         <div style="display: flex; align-items: center; gap: 12px;">
             <button class="btn btn-green" onclick="saveState()"><i class="fa-solid fa-floppy-disk"></i> Save Database</button>
+            <button class="btn btn-amber" onclick="clearAllData()"><i class="fa-solid fa-trash"></i> Clear All Data</button>
         </div>
     </header>
 
@@ -750,6 +751,23 @@
         state.scores.learning = parseInt(document.getElementById('inputLearn').value) || 82;
         state.scores.fitness = parseInt(document.getElementById('inputFit').value) || 85;
         closeModal('metricModal'); render(); saveState(); evaluateWeaknesses();
+    }
+
+    function clearAllData() {
+        if (confirm("Are you sure you want to clear all data? This will reset all schedules, habits, priorities, and score logs.")) {
+            localStorage.removeItem('ai_performance_standalone_db');
+            localStorage.removeItem('ai_performance_db');
+            state = {
+                schedule: [],
+                priorities: [],
+                habits: [],
+                scores: { productivity: 0, health: 0, learning: 0, fitness: 0, discipline: 0, consistency: 0, goal: 0 }
+            };
+            render();
+            evaluateWeaknesses();
+            const status = document.getElementById('statusText');
+            if (status) status.innerText = "🗑️ All data cleared successfully!";
+        }
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
