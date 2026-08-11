@@ -499,33 +499,10 @@
 
 <script>
     let state = {
-        schedule: [
-            { id: 1, time: "06:30 - 07:30 AM", desc: "🌅 Wake up, 750ml Hydration + Salt, 15m Sunlight Exposure & Mobility", checked: false },
-            { id: 2, time: "07:30 - 10:30 AM", desc: "⚡ FOCUS BLOCK I (Highest Priority Deep Work - Zero Interruptions)", checked: false },
-            { id: 3, time: "10:30 - 11:30 AM", desc: "📞 Communications, Email & Async Admin Tasks", checked: false },
-            { id: 4, time: "11:30 - 12:30 PM", desc: "🥗 Meal 1 (45g Protein + Complex Carbs)", checked: false },
-            { id: 5, time: "12:30 - 02:00 PM", desc: "⚡ FOCUS BLOCK II (System Design & Code Architecture)", checked: false },
-            { id: 6, time: "02:00 - 02:20 PM", desc: "🧠 NSDR Session (Non-Sleep Deep Rest / Energy Reset)", checked: false },
-            { id: 7, time: "05:00 - 06:15 PM", desc: "🏋️ FITNESS: Pull Hypertrophy Session (Back, Biceps, Rear Delts)", checked: false },
-            { id: 8, time: "07:00 - 08:30 PM", desc: "📚 LEARNING: Active Recall & Technical Mastery Session", checked: false },
-            { id: 9, time: "10:00 - 10:30 PM", desc: "📱 Digital Screen Shutdown & Sleep Initialization", checked: false }
-        ],
-        priorities: [
-            "Complete 3-hour Deep Work Block I on core feature with zero context-switching.",
-            "Execute Pull Hypertrophy Workout with progressive overload (+2.5kg on rows).",
-            "Complete 90-minute active recall study block on advanced caching & async state.",
-            "Hit 160g protein target across 4 balanced feeding windows.",
-            "Initiate digital screen cutoff strictly by 22:00."
-        ],
-        habits: [
-            { name: "Sunlight (15m)", streak: 14, checked: true },
-            { name: "Hydration (750ml)", streak: 21, checked: true },
-            { name: "Deep Work Block", streak: 9, checked: true },
-            { name: "Hypertrophy Session", streak: 5, checked: true },
-            { name: "Protein Target (150g+)", streak: 12, checked: true },
-            { name: "Digital Cutoff (22:00)", streak: 4, checked: false }
-        ],
-        scores: { productivity: 84, health: 88, learning: 82, fitness: 85, discipline: 89, consistency: 86, goal: 87.5 }
+        schedule: [],
+        priorities: [],
+        habits: [],
+        scores: { productivity: 0, health: 0, learning: 0, fitness: 0, discipline: 0, consistency: 0, goal: 0 }
     };
 
     let monthlyChartInstance = null;
