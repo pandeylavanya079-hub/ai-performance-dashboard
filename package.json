@@ -1,0 +1,12 @@
+{
+  "name": "ai-performance-dashboard",
+  "version": "1.0.0",
+  "description": "Standalone AI Productivity & Performance Command Center",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8080"
+  },
+  "keywords": ["productivity", "ai-coach", "performance", "dashboard", "bio-analytics"],
+  "author": "Lavanya",
+  "license": "MIT"
+}
