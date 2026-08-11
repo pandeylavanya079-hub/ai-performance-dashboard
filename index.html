@@ -231,6 +231,29 @@
         .cell-partial { background: rgba(245, 158, 11, 0.35); border: 1px solid var(--accent-amber); color: #fbbf24; }
         .cell-miss { background: rgba(244, 63, 94, 0.35); border: 1px solid var(--accent-rose); color: #fb7185; }
 
+        /* 7-Column Weekly Grid */
+        .weekly-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-top: 14px; }
+        @media (max-width: 1400px) { .weekly-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); } }
+
+        .day-column {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 250px;
+            transition: all 0.2s ease;
+        }
+        .day-column.today-column { border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.08); box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
+        .day-column-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+        .day-title { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .today-pill { font-size: 10px; font-weight: 800; color: var(--accent-purple); background: rgba(139, 92, 246, 0.2); padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
+
+        .day-item-card { background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .day-item-top { display: flex; align-items: center; justify-content: space-between; }
+
         .schedule-list, .priority-list, .habit-list { display: flex; flex-direction: column; gap: 12px; }
         .schedule-item { display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 16px; }
         .time-badge { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent-blue); background: rgba(59, 130, 246, 0.12); padding: 6px 12px; border-radius: 8px; min-width: 130px; text-align: center; }
@@ -359,23 +382,22 @@
             </div>
         </div>
 
+        <!-- 7-COLUMN WEEKLY SCHEDULE GRID BOARD -->
+        <div class="card">
+            <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
+                <span><i class="fa-solid fa-calendar-week" style="color: #a78bfa;"></i> 7-Column Weekly Schedule Command Board</span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn btn-amber" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('tomorrow')"><i class="fa-solid fa-wand-magic-sparkles"></i> 🔮 Pre-Plan Tomorrow</button>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openModal('activityModal')">+ Add Activity</button>
+                </div>
+            </div>
+            <div class="weekly-grid" id="weeklyGridContainer">
+                <!-- 7 Columns Render Dynamically -->
+            </div>
+        </div>
+
         <div class="main-grid">
             <div style="display: flex; flex-direction: column; gap: 24px;">
-                <div class="card">
-                    <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
-                        <span><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i> Custom Schedule</span>
-                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                            <div class="tab-switcher" style="padding: 2px;">
-                                <button class="tab-btn active" id="dayTab-weekday" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('weekday')">💼 Weekday</button>
-                                <button class="tab-btn" id="dayTab-saturday" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('saturday')">🏃 Saturday</button>
-                                <button class="tab-btn" id="dayTab-sunday" style="padding: 6px 12px; font-size: 12px;" onclick="switchDayTab('sunday')">🧘 Sunday</button>
-                                <button class="tab-btn" id="dayTab-tomorrow" style="padding: 6px 12px; font-size: 12px; color: var(--accent-amber);" onclick="switchDayTab('tomorrow')">🔮 Pre-Plan Tomorrow</button>
-                            </div>
-                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openModal('activityModal')">+ Add Activity</button>
-                        </div>
-                    </div>
-                    <div class="schedule-list" id="scheduleList"></div>
-                </div>
                 <div class="card">
                     <div class="card-title">
                         <span><i class="fa-solid fa-list-check" style="color: #fbbf24;"></i> Top Priorities (MITs)</span>
@@ -462,12 +484,15 @@
         <input type="text" class="form-control" id="actTime" placeholder="Time Window (e.g. 08:00 - 09:30 AM)">
         <input type="text" class="form-control" id="actTitle" placeholder="Activity Title">
         <select class="form-control" id="actDayTarget">
-            <option value="current" selected>Apply to Current Selected Tab</option>
-            <option value="tomorrow">🔮 Tomorrow (Pre-Plan Ahead)</option>
-            <option value="weekday">💼 Weekdays (Mon-Fri)</option>
+            <option value="monday" selected>💼 Monday</option>
+            <option value="tuesday">💼 Tuesday</option>
+            <option value="wednesday">💼 Wednesday</option>
+            <option value="thursday">💼 Thursday</option>
+            <option value="friday">💼 Friday</option>
             <option value="saturday">🏃 Saturday</option>
             <option value="sunday">🧘 Sunday</option>
-            <option value="all">🌐 All Days</option>
+            <option value="tomorrow">🔮 Pre-Plan Tomorrow</option>
+            <option value="all">🌐 All 7 Days</option>
         </select>
         <div style="display: flex; gap: 12px; justify-content: flex-end;">
             <button class="btn btn-secondary" onclick="closeModal('activityModal')">Cancel</button>
@@ -789,36 +814,102 @@
         grid.innerHTML = html;
     }
 
+    const weekDaysList = [
+        { key: 'monday', label: 'Monday', icon: '💼' },
+        { key: 'tuesday', label: 'Tuesday', icon: '💼' },
+        { key: 'wednesday', label: 'Wednesday', icon: '💼' },
+        { key: 'thursday', label: 'Thursday', icon: '💼' },
+        { key: 'friday', label: 'Friday', icon: '💼' },
+        { key: 'saturday', label: 'Saturday', icon: '🏃' },
+        { key: 'sunday', label: 'Sunday', icon: '🧘' }
+    ];
+
+    function renderSchedule() {
+        const container = document.getElementById('weeklyGridContainer');
+        if (!container) return;
+
+        const dayNum = new Date().getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+        const dayMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 0: 6 };
+        const todayIdx = dayMap[dayNum];
+
+        state.schedules = state.schedules || {};
+
+        container.innerHTML = weekDaysList.map((d, idx) => {
+            const list = state.schedules[d.key] || [];
+            const isToday = (idx === todayIdx);
+
+            return `
+                <div class="day-column ${isToday ? 'today-column' : ''}">
+                    <div class="day-column-header">
+                        <div class="day-title">
+                            <span>${d.icon} ${d.label}</span>
+                            ${isToday ? '<span class="today-pill">Today</span>' : ''}
+                        </div>
+                        <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 11px;" onclick="openModalForDay('${d.key}')">+</button>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
+                        ${list.length === 0 ? `
+                            <div style="font-size: 11px; color: var(--text-muted); text-align: center; margin: auto 0; padding: 20px 4px;">
+                                Empty schedule.<br>Click + to add.
+                            </div>
+                        ` : list.map((item, itemIdx) => `
+                            <div class="day-item-card">
+                                <div class="day-item-top">
+                                    <span style="font-weight: 700; color: var(--accent-blue); font-size: 11px;">${item.time}</span>
+                                    <div style="display: flex; gap: 6px; align-items: center;">
+                                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleDayItem('${d.key}', ${itemIdx})">
+                                        <button class="del-btn" style="font-size: 11px;" onclick="deleteDayItem('${d.key}', ${itemIdx})"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </div>
+                                <div style="color: #f3f4f6; ${item.checked ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${item.desc}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleDayItem(dayKey, itemIdx) {
+        if (state.schedules[dayKey] && state.schedules[dayKey][itemIdx]) {
+            state.schedules[dayKey][itemIdx].checked = !state.schedules[dayKey][itemIdx].checked;
+            saveState();
+            renderSchedule();
+        }
+    }
+
+    function deleteDayItem(dayKey, itemIdx) {
+        if (state.schedules[dayKey] && state.schedules[dayKey][itemIdx]) {
+            state.schedules[dayKey].splice(itemIdx, 1);
+            saveState();
+            renderSchedule();
+        }
+    }
+
+    function openModalForDay(dayKey) {
+        const select = document.getElementById('actDayTarget');
+        if (select) select.value = dayKey;
+        openModal('activityModal');
+    }
+
     function updateMonthlyView() { renderMonthlyChart(); renderHeatmap(); }
-
-    function toggleSchedule(idx) {
-        const list = state.schedules[state.activeDayTab] || [];
-        if (list[idx]) list[idx].checked = !list[idx].checked;
-        saveState();
-    }
-
-    function deleteSchedule(idx) {
-        const list = state.schedules[state.activeDayTab] || [];
-        if (list[idx]) list.splice(idx, 1);
-        renderSchedule(); saveState();
-    }
 
     function addCustomActivity() {
         const time = document.getElementById('actTime').value.trim();
         const desc = document.getElementById('actTitle').value.trim();
-        const target = document.getElementById('actDayTarget') ? document.getElementById('actDayTarget').value : 'current';
+        const target = document.getElementById('actDayTarget') ? document.getElementById('actDayTarget').value : 'monday';
         if (!time || !desc) return alert('Enter time & title!');
 
         const item = { id: Date.now(), time, desc, checked: false };
 
         if (target === 'all') {
-            state.schedules.weekday.push({...item});
-            state.schedules.saturday.push({...item});
-            state.schedules.sunday.push({...item});
-        } else if (target === 'current') {
-            (state.schedules[state.activeDayTab] = state.schedules[state.activeDayTab] || []).push(item);
+            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(d => {
+                state.schedules[d] = state.schedules[d] || [];
+                state.schedules[d].push({...item});
+            });
         } else {
-            (state.schedules[target] = state.schedules[target] || []).push(item);
+            state.schedules[target] = state.schedules[target] || [];
+            state.schedules[target].push(item);
         }
 
         document.getElementById('actTime').value = '';
@@ -857,13 +948,12 @@
             localStorage.removeItem('ai_performance_standalone_db');
             localStorage.removeItem('ai_performance_db');
             state = {
-                activeDayTab: 'weekday',
-                schedules: { weekday: [], saturday: [], sunday: [] },
+                activeDayTab: 'monday',
+                schedules: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [], tomorrow: [] },
                 priorities: [],
                 habits: [],
                 scores: { productivity: 0, health: 0, learning: 0, fitness: 0, discipline: 0, consistency: 0, goal: 0 }
             };
-            switchDayTab('weekday');
             render();
             evaluateWeaknesses();
             const status = document.getElementById('statusText');
